@@ -5,22 +5,23 @@ import models
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 
+# Create an instance of the FastAPI application
 app = FastAPI()
+
+# Create database tables based on the models
 models.Base.metadata.create_all(bind=engine)
 
-
+# Define Pydantic models for post and user data
 class PostBase(BaseModel):
     title: str
     content: str
     user_id: int
 
-
 class UserBase(BaseModel):
     username: str
 
 
-# dependency of db
-
+# Define a dependency function to get the database session
 def get_db():
     db = SessionLocal()
     try:
@@ -32,6 +33,7 @@ def get_db():
 # create annotation for db for dependency injection
 db_dependency = Annotated[Session, Depends(get_db)]
 
+# Define API endpoints for creating, reading, and deleting posts
 @app.post("/posts/", status_code=status.HTTP_201_CREATED)
 async def create_post(post: PostBase, db: db_dependency):
     db_post = models.Post(**post.dict())
@@ -53,7 +55,7 @@ async def delete_post(post_id: int, db: db_dependency):
     db.delete(db_post)
     db.commit()
 
-
+# Define API endpoints for creating and reading users
 @app.post("/users", status_code=status.HTTP_201_CREATED)
 async def create_users(user: UserBase, db: db_dependency):
     db_user = models.User(**user.dict())
